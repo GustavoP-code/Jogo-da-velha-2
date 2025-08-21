@@ -9,6 +9,7 @@ class JogoDaVelha
     static bool modoVsComputador;
     static int dificuldadeIA; // 1 = Fácil, 2 = Difícil
     static Random random = new Random();
+    static string ultimaMensagemComputador = "";
 
     static void Main(string[] args)
     {
@@ -57,6 +58,7 @@ class JogoDaVelha
             while (jogarNovamente)
             {
                 InicializarJogo();
+                ultimaMensagemComputador = "";
 
                 Console.Clear();
                 Console.WriteLine(modoVsComputador ?
@@ -72,6 +74,13 @@ class JogoDaVelha
                     Console.WriteLine();
 
                     DesenharTabuleiro();
+
+                    // Exibe mensagem do computador abaixo do tabuleiro
+                    if (!string.IsNullOrEmpty(ultimaMensagemComputador))
+                    {
+                        Console.WriteLine(ultimaMensagemComputador);
+                        ultimaMensagemComputador = ""; // Limpa a mensagem após exibir
+                    }
 
                     if (vencedor == 0 && !ExistemJogadasDisponiveis())
                     {
@@ -129,6 +138,7 @@ class JogoDaVelha
                         else
                         {
                             Console.WriteLine("Jogada inválida. Tente novamente.");
+                            Console.ReadKey(); // Pausa para o usuário ver a mensagem de erro
                         }
                     }
                     else
@@ -189,8 +199,8 @@ class JogoDaVelha
             jogada = JogadaDificil();
         }
 
-        Console.WriteLine($"\nO computador jogou na posição {jogada + 1}");
-        System.Threading.Thread.Sleep(1000); // Pequena pausa para o jogador ver a jogada
+        // Armazena a mensagem para exibir na próxima renderização
+        ultimaMensagemComputador = $"== O computador jogou na posição {jogada + 1} ==";
 
         if (VerificarVencedor('O'))
         {
