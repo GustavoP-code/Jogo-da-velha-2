@@ -9,7 +9,15 @@ class JogoDaVelha
     static bool modoVsComputador;
     static int dificuldadeIA; // 1 = Fácil, 2 = Difícil
     static Random random = new Random();
+    static bool primeiraJogadaHumano = true;
     static string ultimaMensagemComputador = "";
+
+    // Sistema de pontuação completo
+    static int pontuacaoJogador1 = 0;
+    static int pontuacaoJogador2 = 0;
+    static int pontuacaoComputador = 0;
+    static int empates = 0;
+    static int modoJogoAtual = 0; // 0 = nenhum, 1 = PvP, 2 = PvCPU
 
     static void Main(string[] args)
     {
@@ -18,7 +26,12 @@ class JogoDaVelha
         while (!sairDoJogo)
         {
             Console.Clear();
-            Console.WriteLine("=== Jogo da Velha ===");
+            Console.WriteLine("Integrantes:");
+            Console.WriteLine("Arthur Orosco Campos");
+            Console.WriteLine("Gustavo Pereira da Silva");
+            Console.WriteLine("Jean Carlos Belino\n");
+            MostrarPlacarCompleto();
+            Console.WriteLine("\n=== Jogo da Velha ===");
             Console.WriteLine("\nMenu Principal:");
             Console.WriteLine("1 - Jogador vs Jogador");
             Console.WriteLine("2 - Jogador vs Computador");
@@ -37,12 +50,20 @@ class JogoDaVelha
                 continue;
             }
 
+            // Reinicia o placar se o modo de jogo mudou
+            if (modoJogoAtual != opcaoMenu)
+            {
+                ZerarPlacar();
+                modoJogoAtual = opcaoMenu;
+            }
+
             modoVsComputador = (opcaoMenu == 2);
 
             if (modoVsComputador)
             {
                 Console.Clear();
-                Console.WriteLine("=== Dificuldade da IA ===");
+                MostrarPlacarCompleto();
+                Console.WriteLine("\n=== Dificuldade da IA ===");
                 Console.WriteLine("1 - Fácil (jogadas aleatórias)");
                 Console.WriteLine("2 - Difícil (estratégia avançada)");
                 Console.Write("\nEscolha a dificuldade: ");
@@ -58,33 +79,42 @@ class JogoDaVelha
             while (jogarNovamente)
             {
                 InicializarJogo();
-                ultimaMensagemComputador = "";
 
                 Console.Clear();
+                MostrarPlacarCompleto();
                 Console.WriteLine(modoVsComputador ?
-                    $"Modo: Jogador vs Computador (Dificuldade: {(dificuldadeIA == 1 ? "Fácil" : "Difícil")}" :
-                    "Modo: Jogador vs Jogador");
+                    $"\nModo: Jogador vs Computador (Dificuldade: {(dificuldadeIA == 1 ? "Fácil" : "Difícil")}" :
+                    "\nModo: Jogador vs Jogador");
+
+                // Decidir aleatoriamente quem começa no modo vs Computador
+                if (modoVsComputador)
+                {
+                    jogadorAtual = random.Next(1, 3); // 1 ou 2
+                    Console.WriteLine($"\n{(jogadorAtual == 1 ? "Você começa jogando!" : "O computador começa jogando!")}");
+                }
 
                 do
                 {
                     Console.Clear();
+                    MostrarPlacarCompleto();
                     Console.WriteLine(modoVsComputador ?
-                        "Jogador: X | Computador: O" :
-                        "Jogador 1: X | Jogador 2: O");
+                        "\nJogador: X | Computador: O" :
+                        "\nJogador 1: X | Jogador 2: O");
                     Console.WriteLine();
 
                     DesenharTabuleiro();
 
-                    // Exibe mensagem do computador abaixo do tabuleiro
+                    // Mostra a última jogada do computador abaixo do tabuleiro
                     if (!string.IsNullOrEmpty(ultimaMensagemComputador))
                     {
                         Console.WriteLine(ultimaMensagemComputador);
-                        ultimaMensagemComputador = ""; // Limpa a mensagem após exibir
+                        ultimaMensagemComputador = ""; // Limpa a mensagem após mostrar
                     }
 
                     if (vencedor == 0 && !ExistemJogadasDisponiveis())
                     {
                         Console.WriteLine("\nEmpate!");
+                        empates++;
                         break;
                     }
 
@@ -92,20 +122,32 @@ class JogoDaVelha
                     {
                         if (modoVsComputador)
                         {
-                            Console.WriteLine(vencedor == 1 ?
-                                "\nParabéns! Você venceu!" :
-                                "\nO computador venceu!");
+                            if (vencedor == 1)
+                            {
+                                Console.WriteLine("\nParabéns! Você venceu!");
+                                pontuacaoJogador1++;
+                            }
+                            else
+                            {
+                                Console.WriteLine("\nO computador venceu!");
+                                pontuacaoComputador++;
+                            }
                         }
                         else
                         {
                             Console.WriteLine($"\nJogador {vencedor} venceu!");
+                            if (vencedor == 1) pontuacaoJogador1++;
+                            else pontuacaoJogador2++;
                         }
                         break;
                     }
 
                     if (jogadorAtual == 1 || !modoVsComputador)
                     {
-                        Console.WriteLine($"\n{(modoVsComputador ? "Sua vez" : $"Vez do Jogador {jogadorAtual}")}. Escolha uma posição (1-9): ");
+                        // Vez do jogador humano
+                        string mensagem = primeiraJogadaHumano ? "Sua vez" : "Sua vez de jogar";
+                        Console.WriteLine($"\n{mensagem}. Escolha uma posição (1-9): ");
+                        primeiraJogadaHumano = false;
 
                         bool conversaoValida = int.TryParse(Console.ReadLine(), out escolha);
 
@@ -117,16 +159,54 @@ class JogoDaVelha
                             if (VerificarVencedor(marca))
                             {
                                 vencedor = jogadorAtual;
+
+                                // Atualiza pontuação e mostra placar atualizado
+                                if (modoVsComputador)
+                                {
+                                    if (vencedor == 1) pontuacaoJogador1++;
+                                    else pontuacaoComputador++;
+                                }
+                                else
+                                {
+                                    if (vencedor == 1) pontuacaoJogador1++;
+                                    else pontuacaoJogador2++;
+                                }
+
+                                Console.Clear();
+                                MostrarPlacarCompleto();
+                                Console.WriteLine(modoVsComputador ?
+                                    "\nJogador: X | Computador: O" :
+                                    "\nJogador 1: X | Jogador 2: O");
+                                Console.WriteLine();
+                                DesenharTabuleiro();
+
+                                if (modoVsComputador)
+                                {
+                                    Console.WriteLine(vencedor == 1 ?
+                                        "\nParabéns! Você venceu!" :
+                                        "\nO computador venceu!");
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"\nJogador {vencedor} venceu!");
+                                }
                             }
-                            else
+                            else if (ExistemJogadasDisponiveis())
                             {
                                 if (modoVsComputador)
                                 {
-                                    jogadorAtual = 2;
+                                    jogadorAtual = 3 - jogadorAtual; // Alterna entre 1 e 2
 
-                                    if (vencedor == 0 && ExistemJogadasDisponiveis())
+                                    // Se for a vez do computador, ele joga imediatamente
+                                    if (jogadorAtual == 2 && vencedor == 0 && ExistemJogadasDisponiveis())
                                     {
-                                        JogadaComputador();
+                                        int posicaoComputador = JogadaComputador();
+                                        ultimaMensagemComputador = $"\nO computador jogou na posição {posicaoComputador + 1}";
+
+                                        if (vencedor == 0 && ExistemJogadasDisponiveis())
+                                        {
+                                            jogadorAtual = 1; // Volta para o jogador humano
+                                        }
                                     }
                                 }
                                 else
@@ -138,26 +218,59 @@ class JogoDaVelha
                         else
                         {
                             Console.WriteLine("Jogada inválida. Tente novamente.");
-                            Console.ReadKey(); // Pausa para o usuário ver a mensagem de erro
                         }
                     }
                     else
                     {
-                        JogadaComputador();
+                        // Vez do computador
+                        int posicaoComputador = JogadaComputador();
+                        ultimaMensagemComputador = $"\nO computador jogou na posição {posicaoComputador + 1}";
+
+                        if (vencedor == 0 && ExistemJogadasDisponiveis())
+                        {
+                            jogadorAtual = 1; // Volta para o jogador humano
+                            primeiraJogadaHumano = false; // Não é mais a primeira jogada
+                        }
+                        else if (vencedor == 2)
+                        {
+                            // Computador venceu, atualiza pontuação
+                            pontuacaoComputador++;
+                            Console.Clear();
+                            MostrarPlacarCompleto();
+                            Console.WriteLine("\nJogador: X | Computador: O");
+                            Console.WriteLine();
+                            DesenharTabuleiro();
+                            Console.WriteLine("\nO computador venceu!");
+                        }
                     }
 
-                } while (true);
+                } while (vencedor == 0 && ExistemJogadasDisponiveis());
+
+                // Se houve empate, mostra a tela final
+                if (vencedor == 0 && !ExistemJogadasDisponiveis())
+                {
+                    Console.Clear();
+                    MostrarPlacarCompleto();
+                    Console.WriteLine(modoVsComputador ?
+                        "\nJogador: X | Computador: O" :
+                        "\nJogador 1: X | Jogador 2: O");
+                    Console.WriteLine();
+                    DesenharTabuleiro();
+                    Console.WriteLine("\nEmpate!");
+                    empates++;
+                }
 
                 Console.WriteLine("\nO que deseja fazer agora?");
                 Console.WriteLine("1 - Jogar novamente no mesmo modo");
                 Console.WriteLine("2 - Voltar ao menu principal");
                 Console.WriteLine("3 - Sair do jogo");
+                Console.WriteLine("4 - Zerar placar");
                 Console.Write("\nEscolha uma opção: ");
 
                 int opcaoPosJogo;
-                while (!int.TryParse(Console.ReadLine(), out opcaoPosJogo) || (opcaoPosJogo < 1 || opcaoPosJogo > 3))
+                while (!int.TryParse(Console.ReadLine(), out opcaoPosJogo) || (opcaoPosJogo < 1 || opcaoPosJogo > 4))
                 {
-                    Console.Write("Opção inválida. Digite 1, 2 ou 3: ");
+                    Console.Write("Opção inválida. Digite 1, 2, 3 ou 4: ");
                 }
 
                 switch (opcaoPosJogo)
@@ -172,6 +285,10 @@ class JogoDaVelha
                         jogarNovamente = false;
                         sairDoJogo = true;
                         break;
+                    case 4:
+                        ZerarPlacar();
+                        jogarNovamente = false;
+                        break;
                 }
             }
         }
@@ -179,14 +296,38 @@ class JogoDaVelha
         Console.WriteLine("\nObrigado por jogar! Até a próxima!");
     }
 
+    private static void MostrarPlacarCompleto()
+    {
+        Console.WriteLine("=== PLACAR ===");
+        Console.WriteLine($"Jogador 1: {pontuacaoJogador1} vitória(s)");
+        Console.WriteLine($"Jogador 2: {pontuacaoJogador2} vitória(s)");
+        Console.WriteLine($"Computador: {pontuacaoComputador} vitória(s)");
+        Console.WriteLine($"Empates: {empates}");
+        Console.WriteLine("==============");
+    }
+
+    private static void ZerarPlacar()
+    {
+        pontuacaoJogador1 = 0;
+        pontuacaoJogador2 = 0;
+        pontuacaoComputador = 0;
+        empates = 0;
+        // Removida a mensagem de confirmação
+    }
+
     private static void InicializarJogo()
     {
         tabuleiro = new char[] { '1', '2', '3', '4', '5', '6', '7', '8', '9' };
-        jogadorAtual = 1;
         vencedor = 0;
+        primeiraJogadaHumano = true;
+        ultimaMensagemComputador = "";
+        if (!modoVsComputador)
+        {
+            jogadorAtual = 1;
+        }
     }
 
-    private static void JogadaComputador()
+    private static int JogadaComputador()
     {
         int jogada = -1;
 
@@ -199,22 +340,16 @@ class JogoDaVelha
             jogada = JogadaDificil();
         }
 
-        // Armazena a mensagem para exibir na próxima renderização
-        ultimaMensagemComputador = $"== O computador jogou na posição {jogada + 1} ==";
-
         if (VerificarVencedor('O'))
         {
             vencedor = 2;
         }
-        else
-        {
-            jogadorAtual = 1;
-        }
+
+        return jogada;
     }
 
     private static int JogadaFacil()
     {
-        // Jogada totalmente aleatória
         int posicao;
         do
         {
@@ -227,7 +362,6 @@ class JogoDaVelha
 
     private static int JogadaDificil()
     {
-        // 1. Tenta vencer se possível
         int jogadaVencedora = EncontrarJogadaVencedora('O');
         if (jogadaVencedora != -1)
         {
@@ -235,7 +369,6 @@ class JogoDaVelha
             return jogadaVencedora;
         }
 
-        // 2. Tenta bloquear o jogador
         int jogadaBloqueio = EncontrarJogadaVencedora('X');
         if (jogadaBloqueio != -1)
         {
@@ -243,7 +376,6 @@ class JogoDaVelha
             return jogadaBloqueio;
         }
 
-        // 3. Estratégia avançada
         int[] posicoesPrioritarias = { 4, 0, 2, 6, 8, 1, 3, 5, 7 };
 
         foreach (int posicao in posicoesPrioritarias)
@@ -255,7 +387,7 @@ class JogoDaVelha
             }
         }
 
-        return -1; // Nunca deve chegar aqui
+        return -1;
     }
 
     private static int EncontrarJogadaVencedora(char marca)
@@ -294,15 +426,12 @@ class JogoDaVelha
 
     private static bool VerificarVencedor(char marca)
     {
-        // Verifica linhas
         if ((tabuleiro[0] == marca && tabuleiro[1] == marca && tabuleiro[2] == marca) ||
             (tabuleiro[3] == marca && tabuleiro[4] == marca && tabuleiro[5] == marca) ||
             (tabuleiro[6] == marca && tabuleiro[7] == marca && tabuleiro[8] == marca) ||
-            // Verifica colunas
             (tabuleiro[0] == marca && tabuleiro[3] == marca && tabuleiro[6] == marca) ||
             (tabuleiro[1] == marca && tabuleiro[4] == marca && tabuleiro[7] == marca) ||
             (tabuleiro[2] == marca && tabuleiro[5] == marca && tabuleiro[8] == marca) ||
-            // Verifica diagonais
             (tabuleiro[0] == marca && tabuleiro[4] == marca && tabuleiro[8] == marca) ||
             (tabuleiro[2] == marca && tabuleiro[4] == marca && tabuleiro[6] == marca))
         {
