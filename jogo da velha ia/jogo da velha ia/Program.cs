@@ -111,34 +111,25 @@ class JogoDaVelha
                         ultimaMensagemComputador = ""; // Limpa a mensagem após mostrar
                     }
 
+                    // Verifica empate ANTES de qualquer jogada
                     if (vencedor == 0 && !ExistemJogadasDisponiveis())
                     {
-                        Console.WriteLine("\nEmpate!");
+                        // EMPATE - Atualiza imediatamente
                         empates++;
+                        Console.Clear();
+                        MostrarPlacarCompleto();
+                        Console.WriteLine(modoVsComputador ?
+                            "\nJogador: X | Computador: O" :
+                            "\nJogador 1: X | Jogador 2: O");
+                        Console.WriteLine();
+                        DesenharTabuleiro();
+                        Console.WriteLine("\nEmpate!");
                         break;
                     }
 
                     if (vencedor != 0)
                     {
-                        if (modoVsComputador)
-                        {
-                            if (vencedor == 1)
-                            {
-                                Console.WriteLine("\nParabéns! Você venceu!");
-                                pontuacaoJogador1++;
-                            }
-                            else
-                            {
-                                Console.WriteLine("\nO computador venceu!");
-                                pontuacaoComputador++;
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine($"\nJogador {vencedor} venceu!");
-                            if (vencedor == 1) pontuacaoJogador1++;
-                            else pontuacaoJogador2++;
-                        }
+                        // Já foi tratado anteriormente com break
                         break;
                     }
 
@@ -160,7 +151,7 @@ class JogoDaVelha
                             {
                                 vencedor = jogadorAtual;
 
-                                // Atualiza pontuação e mostra placar atualizado
+                                // Atualiza pontuação IMEDIATAMENTE
                                 if (modoVsComputador)
                                 {
                                     if (vencedor == 1) pontuacaoJogador1++;
@@ -172,6 +163,7 @@ class JogoDaVelha
                                     else pontuacaoJogador2++;
                                 }
 
+                                // Mostra tela final com placar ATUALIZADO imediatamente
                                 Console.Clear();
                                 MostrarPlacarCompleto();
                                 Console.WriteLine(modoVsComputador ?
@@ -190,6 +182,8 @@ class JogoDaVelha
                                 {
                                     Console.WriteLine($"\nJogador {vencedor} venceu!");
                                 }
+
+                                break; // Sai do loop imediatamente após vitória
                             }
                             else if (ExistemJogadasDisponiveis())
                             {
@@ -202,6 +196,32 @@ class JogoDaVelha
                                     {
                                         int posicaoComputador = JogadaComputador();
                                         ultimaMensagemComputador = $"\nO computador jogou na posição {posicaoComputador + 1}";
+
+                                        if (VerificarVencedor('O'))
+                                        {
+                                            vencedor = 2;
+                                            pontuacaoComputador++;
+                                            Console.Clear();
+                                            MostrarPlacarCompleto();
+                                            Console.WriteLine("\nJogador: X | Computador: O");
+                                            Console.WriteLine();
+                                            DesenharTabuleiro();
+                                            Console.WriteLine("\nO computador venceu!");
+                                            break; // Sai do loop imediatamente
+                                        }
+
+                                        // Verifica empate APÓS jogada do computador
+                                        if (!ExistemJogadasDisponiveis())
+                                        {
+                                            empates++;
+                                            Console.Clear();
+                                            MostrarPlacarCompleto();
+                                            Console.WriteLine("\nJogador: X | Computador: O");
+                                            Console.WriteLine();
+                                            DesenharTabuleiro();
+                                            Console.WriteLine("\nEmpate!");
+                                            break;
+                                        }
 
                                         if (vencedor == 0 && ExistemJogadasDisponiveis())
                                         {
@@ -226,14 +246,9 @@ class JogoDaVelha
                         int posicaoComputador = JogadaComputador();
                         ultimaMensagemComputador = $"\nO computador jogou na posição {posicaoComputador + 1}";
 
-                        if (vencedor == 0 && ExistemJogadasDisponiveis())
+                        if (VerificarVencedor('O'))
                         {
-                            jogadorAtual = 1; // Volta para o jogador humano
-                            primeiraJogadaHumano = false; // Não é mais a primeira jogada
-                        }
-                        else if (vencedor == 2)
-                        {
-                            // Computador venceu, atualiza pontuação
+                            vencedor = 2;
                             pontuacaoComputador++;
                             Console.Clear();
                             MostrarPlacarCompleto();
@@ -241,14 +256,35 @@ class JogoDaVelha
                             Console.WriteLine();
                             DesenharTabuleiro();
                             Console.WriteLine("\nO computador venceu!");
+                            break; // Sai do loop imediatamente
+                        }
+
+                        // Verifica empate APÓS jogada do computador
+                        if (!ExistemJogadasDisponiveis())
+                        {
+                            empates++;
+                            Console.Clear();
+                            MostrarPlacarCompleto();
+                            Console.WriteLine("\nJogador: X | Computador: O");
+                            Console.WriteLine();
+                            DesenharTabuleiro();
+                            Console.WriteLine("\nEmpate!");
+                            break;
+                        }
+
+                        if (vencedor == 0 && ExistemJogadasDisponiveis())
+                        {
+                            jogadorAtual = 1; // Volta para o jogador humano
+                            primeiraJogadaHumano = false; // Não é mais a primeira jogada
                         }
                     }
 
                 } while (vencedor == 0 && ExistemJogadasDisponiveis());
 
-                // Se houve empate, mostra a tela final
+                // Se houve empate e não foi detectado dentro do loop, mostra a tela final
                 if (vencedor == 0 && !ExistemJogadasDisponiveis())
                 {
+                    empates++;
                     Console.Clear();
                     MostrarPlacarCompleto();
                     Console.WriteLine(modoVsComputador ?
@@ -257,7 +293,6 @@ class JogoDaVelha
                     Console.WriteLine();
                     DesenharTabuleiro();
                     Console.WriteLine("\nEmpate!");
-                    empates++;
                 }
 
                 Console.WriteLine("\nO que deseja fazer agora?");
@@ -312,7 +347,6 @@ class JogoDaVelha
         pontuacaoJogador2 = 0;
         pontuacaoComputador = 0;
         empates = 0;
-        // Removida a mensagem de confirmação
     }
 
     private static void InicializarJogo()
@@ -340,11 +374,6 @@ class JogoDaVelha
             jogada = JogadaDificil();
         }
 
-        if (VerificarVencedor('O'))
-        {
-            vencedor = 2;
-        }
-
         return jogada;
     }
 
@@ -362,32 +391,89 @@ class JogoDaVelha
 
     private static int JogadaDificil()
     {
-        int jogadaVencedora = EncontrarJogadaVencedora('O');
-        if (jogadaVencedora != -1)
-        {
-            tabuleiro[jogadaVencedora] = 'O';
-            return jogadaVencedora;
-        }
+        // Usa o algoritmo Minimax para encontrar a melhor jogada
+        int melhorPontuacao = int.MinValue;
+        int melhorJogada = -1;
 
-        int jogadaBloqueio = EncontrarJogadaVencedora('X');
-        if (jogadaBloqueio != -1)
+        // Para cada jogada possível
+        for (int i = 0; i < 9; i++)
         {
-            tabuleiro[jogadaBloqueio] = 'O';
-            return jogadaBloqueio;
-        }
-
-        int[] posicoesPrioritarias = { 4, 0, 2, 6, 8, 1, 3, 5, 7 };
-
-        foreach (int posicao in posicoesPrioritarias)
-        {
-            if (tabuleiro[posicao] != 'X' && tabuleiro[posicao] != 'O')
+            if (tabuleiro[i] != 'X' && tabuleiro[i] != 'O')
             {
-                tabuleiro[posicao] = 'O';
-                return posicao;
+                // Faz a jogada
+                char originalValor = tabuleiro[i];
+                tabuleiro[i] = 'O';
+
+                // Calcula a pontuação usando Minimax
+                int pontuacao = Minimax(tabuleiro, 0, false);
+
+                // Desfaz a jogada
+                tabuleiro[i] = originalValor;
+
+                // Atualiza a melhor jogada
+                if (pontuacao > melhorPontuacao)
+                {
+                    melhorPontuacao = pontuacao;
+                    melhorJogada = i;
+                }
             }
         }
 
-        return -1;
+        // Faz a melhor jogada
+        tabuleiro[melhorJogada] = 'O';
+        return melhorJogada;
+    }
+
+    private static int Minimax(char[] tabuleiroAtual, int profundidade, bool ehMaximizador)
+    {
+        // Verifica se o jogo terminou
+        if (VerificarVencedor('O', tabuleiroAtual))
+            return 10 - profundidade;
+
+        if (VerificarVencedor('X', tabuleiroAtual))
+            return profundidade - 10;
+
+        if (!ExistemJogadasDisponiveis(tabuleiroAtual))
+            return 0;
+
+        if (ehMaximizador) // Vez da IA (O)
+        {
+            int melhorPontuacao = int.MinValue;
+
+            for (int i = 0; i < 9; i++)
+            {
+                if (tabuleiroAtual[i] != 'X' && tabuleiroAtual[i] != 'O')
+                {
+                    char original = tabuleiroAtual[i];
+                    tabuleiroAtual[i] = 'O';
+                    int pontuacao = Minimax(tabuleiroAtual, profundidade + 1, false);
+                    tabuleiroAtual[i] = original;
+
+                    melhorPontuacao = Math.Max(melhorPontuacao, pontuacao);
+                }
+            }
+
+            return melhorPontuacao;
+        }
+        else // Vez do jogador (X)
+        {
+            int piorPontuacao = int.MaxValue;
+
+            for (int i = 0; i < 9; i++)
+            {
+                if (tabuleiroAtual[i] != 'X' && tabuleiroAtual[i] != 'O')
+                {
+                    char original = tabuleiroAtual[i];
+                    tabuleiroAtual[i] = 'X';
+                    int pontuacao = Minimax(tabuleiroAtual, profundidade + 1, true);
+                    tabuleiroAtual[i] = original;
+
+                    piorPontuacao = Math.Min(piorPontuacao, pontuacao);
+                }
+            }
+
+            return piorPontuacao;
+        }
     }
 
     private static int EncontrarJogadaVencedora(char marca)
@@ -411,29 +497,21 @@ class JogoDaVelha
         return -1;
     }
 
-    private static void DesenharTabuleiro()
-    {
-        Console.WriteLine("     |     |     ");
-        Console.WriteLine($"  {tabuleiro[0]}  |  {tabuleiro[1]}  |  {tabuleiro[2]}  ");
-        Console.WriteLine("_____|_____|_____");
-        Console.WriteLine("     |     |     ");
-        Console.WriteLine($"  {tabuleiro[3]}  |  {tabuleiro[4]}  |  {tabuleiro[5]}  ");
-        Console.WriteLine("_____|_____|_____");
-        Console.WriteLine("     |     |     ");
-        Console.WriteLine($"  {tabuleiro[6]}  |  {tabuleiro[7]}  |  {tabuleiro[8]}  ");
-        Console.WriteLine("     |     |     ");
-    }
-
     private static bool VerificarVencedor(char marca)
     {
-        if ((tabuleiro[0] == marca && tabuleiro[1] == marca && tabuleiro[2] == marca) ||
-            (tabuleiro[3] == marca && tabuleiro[4] == marca && tabuleiro[5] == marca) ||
-            (tabuleiro[6] == marca && tabuleiro[7] == marca && tabuleiro[8] == marca) ||
-            (tabuleiro[0] == marca && tabuleiro[3] == marca && tabuleiro[6] == marca) ||
-            (tabuleiro[1] == marca && tabuleiro[4] == marca && tabuleiro[7] == marca) ||
-            (tabuleiro[2] == marca && tabuleiro[5] == marca && tabuleiro[8] == marca) ||
-            (tabuleiro[0] == marca && tabuleiro[4] == marca && tabuleiro[8] == marca) ||
-            (tabuleiro[2] == marca && tabuleiro[4] == marca && tabuleiro[6] == marca))
+        return VerificarVencedor(marca, tabuleiro);
+    }
+
+    private static bool VerificarVencedor(char marca, char[] tabuleiroAtual)
+    {
+        if ((tabuleiroAtual[0] == marca && tabuleiroAtual[1] == marca && tabuleiroAtual[2] == marca) ||
+            (tabuleiroAtual[3] == marca && tabuleiroAtual[4] == marca && tabuleiroAtual[5] == marca) ||
+            (tabuleiroAtual[6] == marca && tabuleiroAtual[7] == marca && tabuleiroAtual[8] == marca) ||
+            (tabuleiroAtual[0] == marca && tabuleiroAtual[3] == marca && tabuleiroAtual[6] == marca) ||
+            (tabuleiroAtual[1] == marca && tabuleiroAtual[4] == marca && tabuleiroAtual[7] == marca) ||
+            (tabuleiroAtual[2] == marca && tabuleiroAtual[5] == marca && tabuleiroAtual[8] == marca) ||
+            (tabuleiroAtual[0] == marca && tabuleiroAtual[4] == marca && tabuleiroAtual[8] == marca) ||
+            (tabuleiroAtual[2] == marca && tabuleiroAtual[4] == marca && tabuleiroAtual[6] == marca))
         {
             return true;
         }
@@ -442,7 +520,12 @@ class JogoDaVelha
 
     private static bool ExistemJogadasDisponiveis()
     {
-        foreach (char posicao in tabuleiro)
+        return ExistemJogadasDisponiveis(tabuleiro);
+    }
+
+    private static bool ExistemJogadasDisponiveis(char[] tabuleiroAtual)
+    {
+        foreach (char posicao in tabuleiroAtual)
         {
             if (posicao != 'X' && posicao != 'O')
             {
@@ -450,5 +533,37 @@ class JogoDaVelha
             }
         }
         return false;
+    }
+
+    private static void DesenharTabuleiro()
+    {
+        Console.WriteLine("     |     |     ");
+        Console.WriteLine($"  {ObterCaractereColorido(tabuleiro[0])}  |  {ObterCaractereColorido(tabuleiro[1])}  |  {ObterCaractereColorido(tabuleiro[2])}  ");
+        Console.WriteLine("_____|_____|_____");
+        Console.WriteLine("     |     |     ");
+        Console.WriteLine($"  {ObterCaractereColorido(tabuleiro[3])}  |  {ObterCaractereColorido(tabuleiro[4])}  |  {ObterCaractereColorido(tabuleiro[5])}  ");
+        Console.WriteLine("_____|_____|_____");
+        Console.WriteLine("     |     |     ");
+        Console.WriteLine($"  {ObterCaractereColorido(tabuleiro[6])}  |  {ObterCaractereColorido(tabuleiro[7])}  |  {ObterCaractereColorido(tabuleiro[8])}  ");
+        Console.WriteLine("     |     |     ");
+    }
+
+    private static string ObterCaractereColorido(char caractere)
+    {
+        if (caractere == 'X')
+        {
+            // Amarelo
+            return "\u001b[94mX\u001b[0m";
+        }
+        else if (caractere == 'O')
+        {
+            // Vermelho
+            return "\u001b[31mO\u001b[0m";
+        }
+        else
+        {
+            // Números normais (branco)
+            return caractere.ToString();
+        }
     }
 }
